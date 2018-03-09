@@ -6,7 +6,7 @@ import java.net.DatagramPacket;
 import java.net.InetSocketAddress;
 import java.net.SocketTimeoutException;
 import java.nio.ByteBuffer;
-
+import java.util.Scanner;
 /**
  *
  * Client class
@@ -18,6 +18,7 @@ public class EndUser extends Node {
 	
 	//Flag = 0 if coming from client, flag = 1 if coming from router
 	byte[] flag; 
+	boolean finished;
 	boolean isResponse;
 	int responseAddr;
 	InetSocketAddress routerAddress;
@@ -39,7 +40,7 @@ public class EndUser extends Node {
 			this.connectedRouterPort = routerPort;
 			this.routerAddress = new InetSocketAddress(host, routerPort);
 			this.controllerAddress = new InetSocketAddress(host, Node.CONTROLLER_PORT);
-			
+			this.finished = false;
 			this.isResponse = false;
 			this.responseAddr = 0;
 			
@@ -65,12 +66,13 @@ public class EndUser extends Node {
 	 */
 	public synchronized void onReceipt(DatagramPacket packet) throws Exception {
 		StringContent content= new StringContent(packet);
-		StdOut.println("\nPacket received from router...");
+		StdOut.println("Packet received from router...");
 		
 		StdOut.println("Packet contents = " + content.string);
-		
-		StdOut.println("\nWould you like to send a response? [y/n]");
-		String choice = StdIn.readString();
+
+		StdOut.println("Would you like to send a response? [y/n]: :");
+		String choice = StdIn.readLine();
+		//System.out.println("Choice = " + choice + "\n\n");
 
 		if(choice.equalsIgnoreCase("y")) {
 			this.isResponse = true;
@@ -82,8 +84,10 @@ public class EndUser extends Node {
 			StdOut.println("Goodbye.");
 			this.notify();
 		}
-		
-	
+
+
+		StdOut.println("Waiting for contact at End User (" + this.sourcePortNumber + ")...");
+		this.wait();
 	}
 	
 	
@@ -99,16 +103,20 @@ public class EndUser extends Node {
 		//Inform controller of direct connections
 		StdOut.println("Informing controller of connections...");
 		informController();
-		
-		StdOut.println("\nEnter 's' to send a message or 'r' to receive a message:");
-		String choice = StdIn.readString();
+
+		StdOut.println("Enter 's' to send a message or 'r' to receive a message:");
+		String choice = StdIn.readLine();
+		//System.out.println("Choice = " + choicde);
 
 		if(choice.equalsIgnoreCase("s"))
 			sendMessage();
 		
-		else
-			StdOut.println("Waiting for contact at End User (" + this.sourcePortNumber + ")...");
-			this.wait();
+		else{
+			while(!finished){
+				StdOut.println("Waiting for contact at End User (" + this.sourcePortNumber + ")...");
+				this.wait();
+			}
+		}
 	}
 	
 	public synchronized void informController() throws IOException {
@@ -120,7 +128,7 @@ public class EndUser extends Node {
 		
 	}
 	
-	public synchronized void sendMessage() throws IOException {
+	public synchronized void sendMessage() throws IOException, InterruptedException{
 		
 		DatagramPacket packet = null;
 		
@@ -134,20 +142,23 @@ public class EndUser extends Node {
 		dstAddress = new byte[PacketContent.DST_ADDRESS_LENGTH];
 		srcAddress = new byte[PacketContent.SRC_ADDRESS_LENGTH];
 		hopCount = new byte[PacketContent.HOP_COUNT_LENGTH];
-		
+
 		if(!isResponse) {
-		    StdOut.println("\nDestination address of end user: ");
-			String dstStr = StdIn.readString();
-		    dst = Integer.parseInt ( dstStr );
+
+			StdOut.println("Destination address of end user: ");
+			String dstStr = StdIn.readLine();
+			//System.out.println("Address = " + dstStr + "\n\n");
+			dst = Integer.parseInt(dstStr);
 		}
 		
 		else
 			dst = this.responseAddr;
 		
 	    dstAddress = ByteBuffer.allocate(PacketContent.DST_ADDRESS_LENGTH).putInt(dst).array();
-	    
-	    StdOut.println("\nString to send ");
-		String stringToSend = StdIn.readString();
+
+	    StdOut.println("String to send: ");
+		String stringToSend = StdIn.readLine();
+		//System.out.println("String = " + stringToSend + "\n\n");
 
 		payload = (stringToSend.getBytes());
 		StdOut.print(ByteBuffer.wrap(dstAddress).getInt());
@@ -168,6 +179,8 @@ public class EndUser extends Node {
 		packet = new DatagramPacket(buffer, buffer.length, this.routerAddress);
 		socket.send(packet);
 		StdOut.println("Packet sent to router\n");
+		StdOut.println("Waiting for contact at End User (" + this.sourcePortNumber + ")...");
+		this.wait();
 	}
 	
 	private static boolean isAnAddress(String x){
@@ -209,8 +222,9 @@ public class EndUser extends Node {
 		    
 		    else{
 			    //Establish end user details
-				StdOut.println("\nEnter the port for end user to be established on: ");
-				String inputString = StdIn.readString();
+				StdOut.println("Enter the port for end user to be established on: ");
+				String inputString = StdIn.readLine();
+				System.out.println("Port = " + inputString + "\n\n");
 
 				if(isAnAddress(inputString))
 			    	endUserPortNumber = Integer.parseInt ( inputString );
