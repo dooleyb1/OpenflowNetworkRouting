@@ -170,18 +170,58 @@ public class EndUser extends Node {
 		StdOut.println("Packet sent to router\n");
 	}
 	
+	private static boolean isAnAddress(String x){
+
+		int y = Integer.parseInt(x);
+
+		if(y == NET_18_PORT || y == NET_15_PORT || y == NET_28_PORT || y == NET_7_PORT || y == NET_10_PORT ||
+			y == NET_5_PORT || y == NET_11_PORT || y == NET_21_PORT  || y == NET_2_PORT )
+			return true;
+
+		else
+			return false;
+	}
+
 	/**
 	 * Test method
 	 * 
 	 * Sends a packet to a given address
 	 */
 	public static void main(String[] args) {
-		try {	
+		try {
+
+			int endUserPortNumber;
+
 			//Establish end user details
-			StdOut.println("\nEnter the port for end user to be established on: ");
-			String inputString = StdIn.readString();
-		    int endUserPortNumber = Integer.parseInt ( inputString );
+			if(args.length > 0){
+
+				//Verify args[0] is actually an address
+				if(isAnAddress(args[0])){
+					String portArg = args[0];
+			    	endUserPortNumber = Integer.parseInt (portArg);
+				}
+				else{
+					StdOut.println("Invalid input. Exiting...");
+					return;
+				}
+				
+			}
 		    
+		    else{
+			    //Establish end user details
+				StdOut.println("\nEnter the port for end user to be established on: ");
+				String inputString = StdIn.readString();
+
+				if(isAnAddress(inputString))
+			    	endUserPortNumber = Integer.parseInt ( inputString );
+
+			    else{
+					StdOut.println("Invalid input. Exiting...");
+					return;
+				}
+			    	
+		    }
+
 		    //Set connected port for end user
 		    int routerPortNumber=0;
 		    

@@ -314,11 +314,9 @@ public class Router extends Node {
 	public static void main(String[] args) {
 		try {
 			//Read port number from  console
-			System.out.print ( "Enter the port for router to be established on: " );
-		    BufferedReader input = new BufferedReader ( new InputStreamReader ( System.in ));
-		    String inputString = input.readLine();
-		    int routerPortNumber = Integer.parseInt ( inputString );
-		    
+			String portArg = args[0];
+		    int routerPortNumber = Integer.parseInt (portArg);
+		     
 		    //Create router at defined port number
 		    StdOut.println("Router (" + routerPortNumber + ")\n\n");
 		    Router router = new Router(routerPortNumber);
